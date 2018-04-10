@@ -46,14 +46,16 @@ class parsing():
                 print("falaha do crc")
                 print("crc calculado: " + str(crc))
                 print("CRC recebido: "+ dataCRC)
-
-                nack = '\x15'
+                nack = "mensagem recebida! CRC INvalido"
+                # nack = '\x15'
                 con.sendall(nack.upper().encode('UTF-8'))
              #   print("CRC falhou")
                 break
             else:
               #  print("crc deu certo")
-                ack = '\x06'
+              #   ack = '\x06'
+
+                ack = "Mensagem recebida! Tudo certo"
                 con.sendall(ack.upper().encode('UTF-8'))
                 # dadosParser = map(None, dataNoCRC.split())
                 dadosParser = dataNoCRC.split()
