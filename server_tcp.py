@@ -6,7 +6,9 @@ import _thread
 import socket
 import sys
 from crc16branco import calcByte
-
+'''
+classe que implementa o servidor TCP com mult threads e verificação de CRC
+'''
 class parsing():
     def startParsing(self, con, cliente):
         print("Leitão conectado", cliente)
@@ -28,7 +30,7 @@ class parsing():
                 # pega a string sem o crc
                 dataNoCRC = data[:-5]
                 dataNoCRC = dataNoCRC.rstrip(" ")
-                print(dataNoCRC)
+                # print(dataNoCRC)
 
                 crc = 0xFFFF  # inicializa o crc
             except ValueError as e:
@@ -42,30 +44,35 @@ class parsing():
             for ch in dataNoCRC:
                 crc = calcByte(ch, crc)
             # falha do crc sai fora do parser
-            if int(crc) != int(dataCRC):
-                print("falaha do crc")
-                print("crc calculado: " + str(crc))
-                print("CRC recebido: "+ dataCRC)
-                nack = "mensagem recebida! CRC INvalido"
+
+            try:
+
+                if int(crc) != int(dataCRC):
+                    print("falaha do crc")
+                    print("crc calculado: " + str(crc))
+                    print("CRC recebido: "+ dataCRC)
+                    nack = "mensagem recebida! CRC INvalido"
+                    # nack = '\x15'
+                    con.sendall(nack.upper().encode('UTF-8'))
+                 #   print("CRC falhou")
+                    break
+                else:
+                  #  print("crc deu certo")
+                  #   ack = '\x06'
+
+                    ack = "Mensagem recebida! Tudo certo"
+                    con.sendall(ack.upper().encode('UTF-8'))
+                    # dadosParser = map(None, dataNoCRC.split())
+                    dadosParser = dataNoCRC.split()
+                    print("Mensagem Recebida e convertida sem CRC:", dadosParser)
+            except ValueError:
+                nack = "mensagem recebida! não foi possivel calcular o CRC"
                 # nack = '\x15'
                 con.sendall(nack.upper().encode('UTF-8'))
-             #   print("CRC falhou")
-                break
-            else:
-              #  print("crc deu certo")
-              #   ack = '\x06'
-
-                ack = "Mensagem recebida! Tudo certo"
-                con.sendall(ack.upper().encode('UTF-8'))
-                # dadosParser = map(None, dataNoCRC.split())
-                dadosParser = dataNoCRC.split()
-               # print("dados do parser: ", dadosParser)
-                x = -1
-                print(dadosParser)
 
 
         con.close()
-        print ("Finalizando conexao do cliente" , cliente)
+        print ("Finalizando conexao do cliente", cliente)
         _thread.exit()
         sys.exit(1)
 
@@ -85,7 +92,7 @@ tcp.listen(0)
 parsing = parsing()
 while True:
     try:
-        print("Porca a espera dos leitões.... ")
+        print("Server on.... ")
         con, cliente = tcp.accept()
         _thread.start_new_thread(parsing.startParsing, tuple([con, cliente]))
     except KeyboardInterrupt as e:
